@@ -178,8 +178,33 @@
         .exit-focus-btn:hover { background: var(--primary-hover); transform: translateY(-2px); }
 
         .kpi-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; flex-shrink: 0; }
-        .kpi-card { background: var(--surface); padding: 0.75rem 1rem; border-radius: 0.5rem; border: 1px solid var(--border); box-shadow: var(--shadow-sm); display: flex; flex-direction: column; justify-content: center; }
-        .kpi-label { font-size: 0.7rem; text-transform: uppercase; font-weight: 600; color: var(--text-light); margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.3rem; }
+        
+        /* Interactive KPI Card Style */
+        .kpi-card { 
+            background: var(--surface); 
+            padding: 0.75rem 1rem; 
+            border-radius: 0.5rem; 
+            border: 1px solid var(--border); 
+            box-shadow: var(--shadow-sm); 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            transition: transform 0.1s, border-color 0.1s;
+        }
+        /* Specific style for clickable unit cards */
+        .kpi-card.clickable-unit {
+            cursor: pointer;
+        }
+        .kpi-card.clickable-unit:hover {
+            border-color: var(--primary);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+        .kpi-card.clickable-unit:active {
+            transform: translateY(0);
+        }
+
+        .kpi-label { font-size: 0.7rem; text-transform: uppercase; font-weight: 600; color: var(--text-light); margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.3rem; width: 100%; }
         .kpi-value { font-size: 1.25rem; font-weight: 700; color: var(--text-main); letter-spacing: -0.02em; }
 
         .controls-container { background-color: var(--surface); padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border); box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 0.75rem; z-index: 10; flex-shrink: 0; }
@@ -188,7 +213,6 @@
         .custom-select-wrapper { position: relative; min-width: 130px; flex-grow: 1; }
         
         /* --- UNIFIED HEIGHT CONTROLS --- */
-        /* Force same height and centering for all inputs and buttons */
         .custom-select-trigger, .search-input, .date-input, .btn, .btn-group-item {
             height: 36px; /* Standard height */
             display: flex;
@@ -198,7 +222,7 @@
 
         .custom-select-trigger {
             justify-content: space-between; 
-            padding: 0 0.75rem; /* Horizontal padding only, height handles vertical */
+            padding: 0 0.75rem; 
             font-size: 0.85rem; 
             background: var(--input-bg); border: 1px solid var(--border); border-radius: 0.375rem; cursor: pointer; transition: all 0.2s; 
             color: var(--text-light); white-space: nowrap; overflow: hidden; user-select: none;
@@ -290,15 +314,12 @@
 
         /* Table Grid */
         .table-container { 
-            /* REMOVED FLEX 1 to allow fixed height */
-            /* flex: 1; */
             background: var(--surface); 
             border-radius: 0.5rem; 
             border: 1px solid var(--border); 
             box-shadow: var(--shadow-sm); 
             overflow: auto; 
             position: relative; 
-            /* Set max-height for approx 10-12 rows */
             max-height: 500px; 
             min-height: 300px;
         }
@@ -500,7 +521,7 @@
         <div class="brand">
             <img src="LOGO_AGDP POWERED BY CORVUS.png" alt="Logo AGDP" class="brand-logo">
             <h1>Descargas <span style="font-weight: 400; font-size: 0.9em; opacity: 0.9;">| AGDP</span> 
-                <span class="version-badge">v4.16</span>
+                <span class="version-badge">v4.17</span>
             </h1>
         </div>
         
@@ -557,19 +578,30 @@
                 <div class="kpi-value" id="kpi-truck-count">0</div>
                 <div style="font-size:0.75rem; color:var(--text-light);">Viajes</div>
             </div>
-            <div class="kpi-card">
-                <div class="kpi-label">Ton Camiones</div>
+            
+            <!-- CLICKABLE UNIT TOGGLE -->
+            <div class="kpi-card clickable-unit" onclick="toggleUnit()" title="Clic para cambiar unidad (Kg/Ton)">
+                <div class="kpi-label">
+                    <span id="lbl-truck-unit">Ton</span> Camiones 
+                    <i class="ph ph-arrows-left-right" style="font-size: 0.8rem; margin-left: auto; opacity: 0.5;"></i>
+                </div>
                 <div class="kpi-value" id="kpi-truck-kg">0</div>
                 <div style="font-size:0.75rem; color:var(--text-light);">Húmedo</div>
             </div>
+
             <div class="kpi-card">
                 <!-- ICONO SILO CORREGIDO: ph-cylinder rotado -->
                 <div class="kpi-label"><i class="ph ph-cylinder" style="font-size: 1.1rem; transform: rotate(90deg); display: inline-block;"></i> Silos</div>
                 <div class="kpi-value" id="kpi-silo-count">0</div>
                 <div style="font-size:0.75rem; color:var(--text-light);">Cargas</div>
             </div>
-            <div class="kpi-card">
-                <div class="kpi-label">Ton Silos</div>
+            
+            <!-- CLICKABLE UNIT TOGGLE -->
+            <div class="kpi-card clickable-unit" onclick="toggleUnit()" title="Clic para cambiar unidad (Kg/Ton)">
+                <div class="kpi-label">
+                    <span id="lbl-silo-unit">Ton</span> Silos
+                    <i class="ph ph-arrows-left-right" style="font-size: 0.8rem; margin-left: auto; opacity: 0.5;"></i>
+                </div>
                 <div class="kpi-value" id="kpi-silo-kg">0</div>
                 <div style="font-size:0.75rem; color:var(--text-light);">Húmedo</div>
             </div>
@@ -701,11 +733,11 @@
                 </div>
             </div>
             <div class="stat-box">
-                <h4>Ranking Tolvas (Ton)</h4>
+                <h4>Ranking Tolvas (<span id="unit-label-tolva">Ton</span>)</h4>
                 <div class="list-container" id="list-tolva"></div>
             </div>
             <div class="stat-box">
-                <h4>Ranking Contratistas (Ton)</h4>
+                <h4>Ranking Contratistas (<span id="unit-label-cont">Ton</span>)</h4>
                 <div class="list-container" id="list-contratista"></div>
             </div>
         </section>
@@ -888,7 +920,8 @@
             groupedData: [], currentSheetUrl: URL_MANIAGRO, notifications: [],
             fpFrom: null, fpTo: null,
             sortConfig: { key: null, direction: 'asc' },
-            filterDestinationType: 'ALL' 
+            filterDestinationType: 'ALL',
+            displayUnit: 'TON' // 'TON' or 'KG'
         };
         let map; let mapMarkers = [];
         let chartInstances = {}; // Store chart instances to destroy them on update
@@ -927,6 +960,11 @@
             } else {
                 btn.style.display = 'none';
             }
+        }
+        
+        function toggleUnit() {
+            state.displayUnit = state.displayUnit === 'TON' ? 'KG' : 'TON';
+            updateUI(); // Refresh UI with new unit
         }
 
         function checkNotifications() {
@@ -1148,19 +1186,24 @@
             const estData = aggregateData(data, 'ESTABLECIMIENTO');
             // Generate Colors dynamically based on count
             const estColors = estData.map((_, i) => CHART_COLORS[i % CHART_COLORS.length]);
-            renderBarChart('chart-establecimiento', estData, 'Ton por Establecimiento', estColors);
+            
+            let estLabel = state.displayUnit === 'TON' ? 'Ton por Establecimiento' : 'Kg por Establecimiento';
+            renderBarChart('chart-establecimiento', estData, estLabel, estColors);
 
             // 2. Chart: Producto (Cultivo)
             const prodData = aggregateData(data, 'PRODUCTO');
-            renderDoughnutChart('chart-cultivo', prodData, 'Ton por Cultivo');
+            let prodLabel = state.displayUnit === 'TON' ? 'Ton por Cultivo' : 'Kg por Cultivo';
+            renderDoughnutChart('chart-cultivo', prodData, prodLabel);
 
             // 3. List: Tolva
             const tolvaData = aggregateData(data, 'TOLVA');
             renderList('list-tolva', tolvaData);
+            document.getElementById('unit-label-tolva').textContent = state.displayUnit === 'TON' ? 'Ton' : 'Kg';
 
             // 4. List: Contratista
             const contData = aggregateData(data, 'CONTRATISTA');
             renderList('list-contratista', contData);
+            document.getElementById('unit-label-cont').textContent = state.displayUnit === 'TON' ? 'Ton' : 'Kg';
         }
 
         function renderBarChart(canvasId, data, label, colors) {
@@ -1174,8 +1217,9 @@
             // Limit bars to top 15 for readability
             const topData = data.slice(0, 15);
             
-            // Convert to Tonnes
-            const valuesInTon = topData.map(d => d.value / 1000);
+            // Convert values based on display unit
+            const values = topData.map(d => state.displayUnit === 'TON' ? d.value / 1000 : d.value);
+            const unitSuffix = state.displayUnit === 'TON' ? 't' : 'kg';
 
             chartInstances[canvasId] = new Chart(ctx, {
                 type: 'bar',
@@ -1183,7 +1227,7 @@
                     labels: topData.map(d => d.label),
                     datasets: [{
                         label: label,
-                        data: valuesInTon,
+                        data: values,
                         backgroundColor: colors,
                         borderRadius: 4
                     }]
@@ -1196,13 +1240,28 @@
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return context.raw.toFixed(1) + ' t';
+                                    let val = context.raw;
+                                    // Format with decimals for TON, 0 decimals for KG usually
+                                    let formattedVal = state.displayUnit === 'TON' 
+                                        ? val.toFixed(1) 
+                                        : val.toLocaleString('es-AR', {maximumFractionDigits: 0});
+                                    return formattedVal + ' ' + unitSuffix;
                                 }
                             }
                         }
                     },
                     scales: {
-                        y: { beginAtZero: true, ticks: { callback: val => val.toFixed(0) + 't' } },
+                        y: { 
+                            beginAtZero: true, 
+                            ticks: { 
+                                callback: val => {
+                                     let formattedVal = state.displayUnit === 'TON' 
+                                        ? val.toFixed(0) 
+                                        : (val/1000).toFixed(0) + 'k'; // simplify large kg numbers on axis
+                                     return formattedVal + unitSuffix 
+                                } 
+                            } 
+                        },
                         x: { ticks: { display: false } } // Hide X axis labels as requested
                     }
                 }
@@ -1214,14 +1273,19 @@
                 legendContainer.innerHTML = '';
                 topData.forEach((item, index) => {
                     const color = colors[index % colors.length];
-                    const valTon = (item.value / 1000).toFixed(1);
+                    let valDisplay;
+                    if (state.displayUnit === 'TON') {
+                        valDisplay = (item.value / 1000).toFixed(1) + 't';
+                    } else {
+                        valDisplay = item.value.toLocaleString('es-AR', {maximumFractionDigits: 0}) + 'kg';
+                    }
                     
                     const div = document.createElement('div');
                     div.className = 'legend-item';
                     div.innerHTML = `
                         <div class="legend-color" style="background-color: ${color};"></div>
                         <div style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-                            ${item.label} <strong style="margin-left:4px;">${valTon}t</strong>
+                            ${item.label} <strong style="margin-left:4px;">${valDisplay}</strong>
                         </div>
                     `;
                     legendContainer.appendChild(div);
@@ -1237,14 +1301,15 @@
                 chartInstances[canvasId].destroy();
             }
 
-            const valuesInTon = data.map(d => d.value / 1000);
+            const values = data.map(d => state.displayUnit === 'TON' ? d.value / 1000 : d.value);
+            const unitSuffix = state.displayUnit === 'TON' ? 't' : 'kg';
             
             chartInstances[canvasId] = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
                     labels: data.map(d => d.label),
                     datasets: [{
-                        data: valuesInTon,
+                        data: values,
                         backgroundColor: CHART_COLORS,
                         borderWidth: 0
                     }]
@@ -1260,7 +1325,12 @@
                                     const val = context.raw;
                                     const total = context.chart._metasets[context.datasetIndex].total;
                                     const percentage = ((val / total) * 100).toFixed(1) + '%';
-                                    return context.label + ': ' + val.toFixed(1) + 't (' + percentage + ')';
+                                    
+                                    let formattedVal = state.displayUnit === 'TON' 
+                                        ? val.toFixed(1) 
+                                        : val.toLocaleString('es-AR', {maximumFractionDigits: 0});
+                                        
+                                    return context.label + ': ' + formattedVal + unitSuffix + ' (' + percentage + ')';
                                 }
                             }
                         }
@@ -1280,12 +1350,20 @@
             }
 
             data.forEach(item => {
-                const valTon = (item.value / 1000).toLocaleString('es-AR', {maximumFractionDigits: 1});
+                let valDisplay, unitSuffix;
+                if (state.displayUnit === 'TON') {
+                    valDisplay = (item.value / 1000).toLocaleString('es-AR', {maximumFractionDigits: 1});
+                    unitSuffix = 't';
+                } else {
+                    valDisplay = item.value.toLocaleString('es-AR', {maximumFractionDigits: 0});
+                    unitSuffix = 'kg';
+                }
+
                 const div = document.createElement('div');
                 div.className = 'stat-list-item';
                 div.innerHTML = `
                     <div class="stat-list-label" title="${item.label}">${item.label}</div>
-                    <div class="stat-list-val">${valTon} t</div>
+                    <div class="stat-list-val">${valDisplay} ${unitSuffix}</div>
                 `;
                 container.appendChild(div);
             });
@@ -1472,10 +1550,24 @@
             const truckTon = truckKg / 1000;
             const siloTon = siloKg / 1000;
 
+            let truckKgDisplay = truckKg;
+            let siloKgDisplay = siloKg;
+
+            if(state.displayUnit === 'TON') {
+                truckKgDisplay = truckTon;
+                siloKgDisplay = siloTon;
+            }
+
+            // Update Labels
+            const truckUnitSpan = document.getElementById('lbl-truck-unit');
+            if (truckUnitSpan) truckUnitSpan.textContent = state.displayUnit === 'TON' ? 'Ton' : 'Kg';
+            const siloUnitSpan = document.getElementById('lbl-silo-unit');
+            if (siloUnitSpan) siloUnitSpan.textContent = state.displayUnit === 'TON' ? 'Ton' : 'Kg';
+
             safeSetText('kpi-truck-count', truckCount.toLocaleString('es-AR'));
-            safeSetText('kpi-truck-kg', truckTon.toLocaleString('es-AR', {maximumFractionDigits: 1}));
+            safeSetText('kpi-truck-kg', truckKgDisplay.toLocaleString('es-AR', {maximumFractionDigits: state.displayUnit === 'TON' ? 2 : 0}));
             safeSetText('kpi-silo-count', siloCount.toLocaleString('es-AR'));
-            safeSetText('kpi-silo-kg', siloTon.toLocaleString('es-AR', {maximumFractionDigits: 1}));
+            safeSetText('kpi-silo-kg', siloKgDisplay.toLocaleString('es-AR', {maximumFractionDigits: state.displayUnit === 'TON' ? 2 : 0}));
         }
 
         function initColumnConfig() {
