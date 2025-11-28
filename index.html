@@ -41,6 +41,9 @@
             /* Grilla Agrupada Claro */
             --group-row-bg: #f0fdf4; 
             --group-row-text: #166534; 
+            /* Toggle Badge Colors */
+            --badge-bg: #e0f2f1;
+            --badge-text: #204B42;
         }
 
         body.dark-mode {
@@ -57,6 +60,9 @@
             /* Grilla Agrupada Oscuro */
             --group-row-bg: #0c2e26; 
             --group-row-text: #a7f3d0;
+            /* Toggle Badge Colors Dark */
+            --badge-bg: #134e4a;
+            --badge-text: #ccfbf1;
         }
         
         /* Overrides Flatpickr Dark */
@@ -190,21 +196,46 @@
             flex-direction: column; 
             justify-content: center; 
             transition: transform 0.1s, border-color 0.1s;
+            position: relative;
         }
-        /* Specific style for clickable unit cards */
+        
+        /* Clickable Unit Styles */
         .kpi-card.clickable-unit {
             cursor: pointer;
         }
         .kpi-card.clickable-unit:hover {
             border-color: var(--primary);
-            transform: translateY(-1px);
             box-shadow: var(--shadow-md);
         }
-        .kpi-card.clickable-unit:active {
-            transform: translateY(0);
+        
+        /* The Badge/Button inside KPI */
+        .unit-toggle-pill {
+            background-color: var(--badge-bg);
+            color: var(--badge-text);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+        .kpi-card.clickable-unit:hover .unit-toggle-pill {
+            background-color: var(--primary);
+            color: white;
         }
 
-        .kpi-label { font-size: 0.7rem; text-transform: uppercase; font-weight: 600; color: var(--text-light); margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.3rem; width: 100%; }
+        .kpi-header-row {
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            width: 100%;
+            margin-bottom: 0.25rem;
+        }
+
+        .kpi-label { font-size: 0.7rem; text-transform: uppercase; font-weight: 600; color: var(--text-light); display: flex; align-items: center; gap: 0.3rem; }
         .kpi-value { font-size: 1.25rem; font-weight: 700; color: var(--text-main); letter-spacing: -0.02em; }
 
         .controls-container { background-color: var(--surface); padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border); box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 0.75rem; z-index: 10; flex-shrink: 0; }
@@ -521,7 +552,7 @@
         <div class="brand">
             <img src="LOGO_AGDP POWERED BY CORVUS.png" alt="Logo AGDP" class="brand-logo">
             <h1>Descargas <span style="font-weight: 400; font-size: 0.9em; opacity: 0.9;">| AGDP</span> 
-                <span class="version-badge">v4.17</span>
+                <span class="version-badge">v4.18</span>
             </h1>
         </div>
         
@@ -579,11 +610,17 @@
                 <div style="font-size:0.75rem; color:var(--text-light);">Viajes</div>
             </div>
             
-            <!-- CLICKABLE UNIT TOGGLE -->
+            <!-- CLICKABLE UNIT TOGGLE - REDESIGNED -->
             <div class="kpi-card clickable-unit" onclick="toggleUnit()" title="Clic para cambiar unidad (Kg/Ton)">
-                <div class="kpi-label">
-                    <span id="lbl-truck-unit">Ton</span> Camiones 
-                    <i class="ph ph-arrows-left-right" style="font-size: 0.8rem; margin-left: auto; opacity: 0.5;"></i>
+                <div class="kpi-header-row">
+                    <div class="kpi-label">
+                        Camiones 
+                    </div>
+                    <!-- The new toggle pill badge -->
+                    <div class="unit-toggle-pill">
+                        <span id="lbl-truck-unit-badge">TON</span>
+                        <i class="ph ph-arrows-left-right"></i>
+                    </div>
                 </div>
                 <div class="kpi-value" id="kpi-truck-kg">0</div>
                 <div style="font-size:0.75rem; color:var(--text-light);">Húmedo</div>
@@ -596,11 +633,17 @@
                 <div style="font-size:0.75rem; color:var(--text-light);">Cargas</div>
             </div>
             
-            <!-- CLICKABLE UNIT TOGGLE -->
+            <!-- CLICKABLE UNIT TOGGLE - REDESIGNED -->
             <div class="kpi-card clickable-unit" onclick="toggleUnit()" title="Clic para cambiar unidad (Kg/Ton)">
-                <div class="kpi-label">
-                    <span id="lbl-silo-unit">Ton</span> Silos
-                    <i class="ph ph-arrows-left-right" style="font-size: 0.8rem; margin-left: auto; opacity: 0.5;"></i>
+                <div class="kpi-header-row">
+                     <div class="kpi-label">
+                        Silos
+                    </div>
+                    <!-- The new toggle pill badge -->
+                    <div class="unit-toggle-pill">
+                        <span id="lbl-silo-unit-badge">TON</span>
+                        <i class="ph ph-arrows-left-right"></i>
+                    </div>
                 </div>
                 <div class="kpi-value" id="kpi-silo-kg">0</div>
                 <div style="font-size:0.75rem; color:var(--text-light);">Húmedo</div>
@@ -1559,10 +1602,10 @@
             }
 
             // Update Labels
-            const truckUnitSpan = document.getElementById('lbl-truck-unit');
-            if (truckUnitSpan) truckUnitSpan.textContent = state.displayUnit === 'TON' ? 'Ton' : 'Kg';
-            const siloUnitSpan = document.getElementById('lbl-silo-unit');
-            if (siloUnitSpan) siloUnitSpan.textContent = state.displayUnit === 'TON' ? 'Ton' : 'Kg';
+            const truckUnitSpan = document.getElementById('lbl-truck-unit-badge');
+            if (truckUnitSpan) truckUnitSpan.textContent = state.displayUnit;
+            const siloUnitSpan = document.getElementById('lbl-silo-unit-badge');
+            if (siloUnitSpan) siloUnitSpan.textContent = state.displayUnit;
 
             safeSetText('kpi-truck-count', truckCount.toLocaleString('es-AR'));
             safeSetText('kpi-truck-kg', truckKgDisplay.toLocaleString('es-AR', {maximumFractionDigits: state.displayUnit === 'TON' ? 2 : 0}));
