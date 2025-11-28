@@ -360,6 +360,32 @@
         .stat-list-val { font-weight: 600; color: var(--text-main); }
         .stat-list-label { color: var(--text-light); text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 70%; }
 
+        /* Custom Legend Styles for Bar Chart */
+        .custom-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+            overflow-y: auto;
+            max-height: 80px;
+            padding-right: 5px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            font-size: 0.7rem;
+            color: var(--text-light);
+            width: 48%;
+            margin-bottom: 2px;
+        }
+        .legend-color {
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+            margin-right: 6px;
+            flex-shrink: 0;
+        }
+
         @media (max-width: 1024px) {
             .stats-grid { grid-template-columns: 1fr 1fr; }
         }
@@ -422,7 +448,7 @@
         <div class="brand">
             <img src="LOGO_AGDP POWERED BY CORVUS.png" alt="Logo AGDP" class="brand-logo">
             <h1>Descargas <span style="font-weight: 400; font-size: 0.9em; opacity: 0.9;">| AGDP</span> 
-                <span class="version-badge">v4.9</span>
+                <span class="version-badge">v4.10</span>
             </h1>
         </div>
         
@@ -480,7 +506,7 @@
                 <div style="font-size:0.75rem; color:var(--text-light);">Viajes</div>
             </div>
             <div class="kpi-card">
-                <div class="kpi-label">Kg Camiones</div>
+                <div class="kpi-label">Ton Camiones</div>
                 <div class="kpi-value" id="kpi-truck-kg">0</div>
                 <div style="font-size:0.75rem; color:var(--text-light);">Húmedo</div>
             </div>
@@ -491,7 +517,7 @@
                 <div style="font-size:0.75rem; color:var(--text-light);">Cargas</div>
             </div>
             <div class="kpi-card">
-                <div class="kpi-label">Kg Silos</div>
+                <div class="kpi-label">Ton Silos</div>
                 <div class="kpi-value" id="kpi-silo-kg">0</div>
                 <div style="font-size:0.75rem; color:var(--text-light);">Húmedo</div>
             </div>
@@ -606,6 +632,8 @@
                 <div class="canvas-container">
                     <canvas id="chart-establecimiento"></canvas>
                 </div>
+                <!-- CUSTOM LEGEND -->
+                <div id="legend-establecimiento" class="custom-legend"></div>
             </div>
             <div class="stat-box">
                 <h4>Totales por Cultivo</h4>
@@ -614,11 +642,11 @@
                 </div>
             </div>
             <div class="stat-box">
-                <h4>Ranking Tolvas (Kg)</h4>
+                <h4>Ranking Tolvas (Ton)</h4>
                 <div class="list-container" id="list-tolva"></div>
             </div>
             <div class="stat-box">
-                <h4>Ranking Contratistas (Kg)</h4>
+                <h4>Ranking Contratistas (Ton)</h4>
                 <div class="list-container" id="list-contratista"></div>
             </div>
         </section>
@@ -790,6 +818,13 @@
         };
         let map; let mapMarkers = [];
         let chartInstances = {}; // Store chart instances to destroy them on update
+        
+        // Generate a fixed set of colors for charts
+        const CHART_COLORS = [
+            '#204B42', '#10b981', '#f59e0b', '#3b82f6', '#64748b', 
+            '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316',
+            '#a3e635', '#06b6d4', '#6366f1', '#d946ef', '#f43f5e'
+        ];
 
         // --- HELPER FUNCTIONS ---
         function showLoader() { document.getElementById('loading-overlay').classList.add('active'); }
@@ -953,7 +988,7 @@
             updateMassActionUI();
         }
 
-        // --- CHART & LIST FUNCTIONS (NEW) ---
+        // --- CHART & LIST FUNCTIONS ---
         
         function aggregateData(data, key) {
             const map = {};
@@ -971,11 +1006,13 @@
         function updateCharts(data) {
             // 1. Chart: Establecimiento
             const estData = aggregateData(data, 'ESTABLECIMIENTO');
-            renderBarChart('chart-establecimiento', estData, 'Kg por Establecimiento');
+            // Generate Colors dynamically based on count
+            const estColors = estData.map((_, i) => CHART_COLORS[i % CHART_COLORS.length]);
+            renderBarChart('chart-establecimiento', estData, 'Ton por Establecimiento', estColors);
 
             // 2. Chart: Producto (Cultivo)
             const prodData = aggregateData(data, 'PRODUCTO');
-            renderDoughnutChart('chart-cultivo', prodData, 'Kg por Cultivo');
+            renderDoughnutChart('chart-cultivo', prodData, 'Ton por Cultivo');
 
             // 3. List: Tolva
             const tolvaData = aggregateData(data, 'TOLVA');
@@ -986,7 +1023,7 @@
             renderList('list-contratista', contData);
         }
 
-        function renderBarChart(canvasId, data, label) {
+        function renderBarChart(canvasId, data, label, colors) {
             const ctx = document.getElementById(canvasId);
             if (!ctx) return;
             
@@ -994,17 +1031,20 @@
                 chartInstances[canvasId].destroy();
             }
 
-            // Limit bars to top 10 for readability
-            const topData = data.slice(0, 10);
+            // Limit bars to top 15 for readability
+            const topData = data.slice(0, 15);
             
+            // Convert to Tonnes
+            const valuesInTon = topData.map(d => d.value / 1000);
+
             chartInstances[canvasId] = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: topData.map(d => d.label),
                     datasets: [{
                         label: label,
-                        data: topData.map(d => d.value),
-                        backgroundColor: '#204B42',
+                        data: valuesInTon,
+                        backgroundColor: colors,
                         borderRadius: 4
                     }]
                 },
@@ -1012,14 +1052,41 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { display: false }
+                        legend: { display: false }, // Hide Chart.js default legend
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.raw.toFixed(1) + ' t';
+                                }
+                            }
+                        }
                     },
                     scales: {
-                        y: { beginAtZero: true, ticks: { callback: val => (val/1000).toFixed(0) + 't' } },
-                        x: { ticks: { font: { size: 10 } } }
+                        y: { beginAtZero: true, ticks: { callback: val => val.toFixed(0) + 't' } },
+                        x: { ticks: { display: false } } // Hide X axis labels as requested
                     }
                 }
             });
+
+            // Generate Custom Legend below
+            const legendContainer = document.getElementById('legend-establecimiento');
+            if(legendContainer) {
+                legendContainer.innerHTML = '';
+                topData.forEach((item, index) => {
+                    const color = colors[index % colors.length];
+                    const valTon = (item.value / 1000).toFixed(1);
+                    
+                    const div = document.createElement('div');
+                    div.className = 'legend-item';
+                    div.innerHTML = `
+                        <div class="legend-color" style="background-color: ${color};"></div>
+                        <div style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                            ${item.label} <strong style="margin-left:4px;">${valTon}t</strong>
+                        </div>
+                    `;
+                    legendContainer.appendChild(div);
+                });
+            }
         }
 
         function renderDoughnutChart(canvasId, data, label) {
@@ -1030,15 +1097,15 @@
                 chartInstances[canvasId].destroy();
             }
 
-            const colors = ['#204B42', '#10b981', '#f59e0b', '#3b82f6', '#64748b'];
+            const valuesInTon = data.map(d => d.value / 1000);
             
             chartInstances[canvasId] = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
                     labels: data.map(d => d.label),
                     datasets: [{
-                        data: data.map(d => d.value),
-                        backgroundColor: colors,
+                        data: valuesInTon,
+                        backgroundColor: CHART_COLORS,
                         borderWidth: 0
                     }]
                 },
@@ -1046,7 +1113,17 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { position: 'right', labels: { boxWidth: 12, font: { size: 10 } } }
+                        legend: { position: 'right', labels: { boxWidth: 12, font: { size: 10 } } },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const val = context.raw;
+                                    const total = context.chart._metasets[context.datasetIndex].total;
+                                    const percentage = ((val / total) * 100).toFixed(1) + '%';
+                                    return context.label + ': ' + val.toFixed(1) + 't (' + percentage + ')';
+                                }
+                            }
+                        }
                     }
                 }
             });
@@ -1063,11 +1140,12 @@
             }
 
             data.forEach(item => {
+                const valTon = (item.value / 1000).toLocaleString('es-AR', {maximumFractionDigits: 1});
                 const div = document.createElement('div');
                 div.className = 'stat-list-item';
                 div.innerHTML = `
                     <div class="stat-list-label" title="${item.label}">${item.label}</div>
-                    <div class="stat-list-val">${item.value.toLocaleString('es-AR')} kg</div>
+                    <div class="stat-list-val">${valTon} t</div>
                 `;
                 container.appendChild(div);
             });
@@ -1250,10 +1328,14 @@
                 if(el) el.textContent = val;
             };
 
+            // Convert to Tonnes (/ 1000)
+            const truckTon = truckKg / 1000;
+            const siloTon = siloKg / 1000;
+
             safeSetText('kpi-truck-count', truckCount.toLocaleString('es-AR'));
-            safeSetText('kpi-truck-kg', truckKg.toLocaleString('es-AR'));
+            safeSetText('kpi-truck-kg', truckTon.toLocaleString('es-AR', {maximumFractionDigits: 1}));
             safeSetText('kpi-silo-count', siloCount.toLocaleString('es-AR'));
-            safeSetText('kpi-silo-kg', siloKg.toLocaleString('es-AR'));
+            safeSetText('kpi-silo-kg', siloTon.toLocaleString('es-AR', {maximumFractionDigits: 1}));
         }
 
         function initColumnConfig() {
