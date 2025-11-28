@@ -16,6 +16,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
 
+    <!-- Chart.js for Charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
         :root {
             /* Colores Base (Modo Claro) */
@@ -165,7 +168,7 @@
 
         /* Focus Mode */
         .dashboard.focus-mode { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 500; background: var(--bg-body); padding: 0; margin: 0; }
-        .dashboard.focus-mode .kpi-container, .dashboard.focus-mode .controls-container { display: none; }
+        .dashboard.focus-mode .kpi-container, .dashboard.focus-mode .controls-container, .dashboard.focus-mode .stats-grid { display: none; }
         .dashboard.focus-mode .table-container { height: 100vh; max-height: 100vh; border-radius: 0; border: none; }
         .exit-focus-btn {
             position: fixed; bottom: 20px; right: 20px; background: var(--primary); color: white;
@@ -262,14 +265,17 @@
 
         /* Table Grid */
         .table-container { 
-            flex: 1; 
+            /* REMOVED FLEX 1 to allow fixed height */
+            /* flex: 1; */
             background: var(--surface); 
             border-radius: 0.5rem; 
             border: 1px solid var(--border); 
             box-shadow: var(--shadow-sm); 
             overflow: auto; 
             position: relative; 
-            min-height: 400px; 
+            /* Set max-height for approx 12 rows */
+            max-height: 600px;
+            min-height: 300px;
         }
         
         table { width: auto; min-width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.8rem; }
@@ -304,8 +310,61 @@
 
         .mass-action-bar { background-color: var(--surface); color: var(--text-main); padding: 0.8rem 1rem; border-radius: 0.5rem; display: flex; align-items: center; gap: 1rem; font-size: 0.9rem; margin-left: auto; border: 1px solid var(--border); box-shadow: 0 -4px 10px rgba(0,0,0,0.1); opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s; transform: translateY(10px); }
         .mass-action-bar.visible { opacity: 1; pointer-events: all; transform: translateY(0); }
+        
+        /* --- STATS GRID (NEW) --- */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+        }
+        .stat-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            flex-direction: column;
+            height: 300px; /* Fixed height for charts/lists */
+            overflow: hidden;
+        }
+        .stat-box h4 {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-light);
+            margin-bottom: 0.8rem;
+            text-transform: uppercase;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .canvas-container {
+            flex: 1;
+            position: relative;
+            min-height: 0; /* Essential for Chart.js resizing */
+        }
+        .list-container {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+        .stat-list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.85rem;
+        }
+        .stat-list-item:last-child { border-bottom: none; }
+        .stat-list-val { font-weight: 600; color: var(--text-main); }
+        .stat-list-label { color: var(--text-light); text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 70%; }
 
+        @media (max-width: 1024px) {
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+        }
         @media (max-width: 768px) {
+            .stats-grid { grid-template-columns: 1fr; }
             body { height: auto; overflow: auto; }
             header { padding: 0.5rem 1rem; position: relative; }
             .brand h1 { display: none; }
@@ -363,7 +422,7 @@
         <div class="brand">
             <img src="LOGO_AGDP POWERED BY CORVUS.png" alt="Logo AGDP" class="brand-logo">
             <h1>Descargas <span style="font-weight: 400; font-size: 0.9em; opacity: 0.9;">| AGDP</span> 
-                <span class="version-badge">v4.8</span>
+                <span class="version-badge">v4.9</span>
             </h1>
         </div>
         
@@ -539,6 +598,30 @@
                 <tbody id="table-body"></tbody>
             </table>
         </section>
+
+        <!-- NEW DASHBOARD SECTION -->
+        <section class="stats-grid">
+            <div class="stat-box">
+                <h4>Totales por Establecimiento</h4>
+                <div class="canvas-container">
+                    <canvas id="chart-establecimiento"></canvas>
+                </div>
+            </div>
+            <div class="stat-box">
+                <h4>Totales por Cultivo</h4>
+                <div class="canvas-container">
+                    <canvas id="chart-cultivo"></canvas>
+                </div>
+            </div>
+            <div class="stat-box">
+                <h4>Ranking Tolvas (Kg)</h4>
+                <div class="list-container" id="list-tolva"></div>
+            </div>
+            <div class="stat-box">
+                <h4>Ranking Contratistas (Kg)</h4>
+                <div class="list-container" id="list-contratista"></div>
+            </div>
+        </section>
     </div>
 
     <!-- Modals -->
@@ -706,6 +789,7 @@
             filterDestinationType: 'ALL' 
         };
         let map; let mapMarkers = [];
+        let chartInstances = {}; // Store chart instances to destroy them on update
 
         // --- HELPER FUNCTIONS ---
         function showLoader() { document.getElementById('loading-overlay').classList.add('active'); }
@@ -864,7 +948,129 @@
             renderTableHeader();
             renderTable(state.groupedData);
             renderKPIs(state.groupedData);
+            // New function to update charts
+            updateCharts(state.filtered);
             updateMassActionUI();
+        }
+
+        // --- CHART & LIST FUNCTIONS (NEW) ---
+        
+        function aggregateData(data, key) {
+            const map = {};
+            data.forEach(r => {
+                let k = r[key];
+                if (!k || k.trim() === '') k = 'Sin Datos';
+                if (!map[k]) map[k] = 0;
+                map[k] += r.PESO_NUM;
+            });
+            return Object.entries(map)
+                .sort((a, b) => b[1] - a[1])
+                .map(([label, value]) => ({ label, value }));
+        }
+
+        function updateCharts(data) {
+            // 1. Chart: Establecimiento
+            const estData = aggregateData(data, 'ESTABLECIMIENTO');
+            renderBarChart('chart-establecimiento', estData, 'Kg por Establecimiento');
+
+            // 2. Chart: Producto (Cultivo)
+            const prodData = aggregateData(data, 'PRODUCTO');
+            renderDoughnutChart('chart-cultivo', prodData, 'Kg por Cultivo');
+
+            // 3. List: Tolva
+            const tolvaData = aggregateData(data, 'TOLVA');
+            renderList('list-tolva', tolvaData);
+
+            // 4. List: Contratista
+            const contData = aggregateData(data, 'CONTRATISTA');
+            renderList('list-contratista', contData);
+        }
+
+        function renderBarChart(canvasId, data, label) {
+            const ctx = document.getElementById(canvasId);
+            if (!ctx) return;
+            
+            if (chartInstances[canvasId]) {
+                chartInstances[canvasId].destroy();
+            }
+
+            // Limit bars to top 10 for readability
+            const topData = data.slice(0, 10);
+            
+            chartInstances[canvasId] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: topData.map(d => d.label),
+                    datasets: [{
+                        label: label,
+                        data: topData.map(d => d.value),
+                        backgroundColor: '#204B42',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { callback: val => (val/1000).toFixed(0) + 't' } },
+                        x: { ticks: { font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        function renderDoughnutChart(canvasId, data, label) {
+             const ctx = document.getElementById(canvasId);
+            if (!ctx) return;
+            
+            if (chartInstances[canvasId]) {
+                chartInstances[canvasId].destroy();
+            }
+
+            const colors = ['#204B42', '#10b981', '#f59e0b', '#3b82f6', '#64748b'];
+            
+            chartInstances[canvasId] = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.map(d => d.label),
+                    datasets: [{
+                        data: data.map(d => d.value),
+                        backgroundColor: colors,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right', labels: { boxWidth: 12, font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        function renderList(containerId, data) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = '';
+            
+            if (data.length === 0) {
+                container.innerHTML = '<div style="padding:1rem; color:var(--text-light); font-size:0.8rem;">Sin datos</div>';
+                return;
+            }
+
+            data.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'stat-list-item';
+                div.innerHTML = `
+                    <div class="stat-list-label" title="${item.label}">${item.label}</div>
+                    <div class="stat-list-val">${item.value.toLocaleString('es-AR')} kg</div>
+                `;
+                container.appendChild(div);
+            });
         }
 
         function renderTableHeader() {
