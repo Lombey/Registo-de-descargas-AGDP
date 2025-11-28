@@ -559,7 +559,7 @@
         <div class="brand">
             <img src="LOGO_AGDP POWERED BY CORVUS.png" alt="Logo AGDP" class="brand-logo">
             <h1>Descargas <span style="font-weight: 400; font-size: 0.9em; opacity: 0.9;">| AGDP</span> 
-                <span class="version-badge">v4.22</span>
+                <span class="version-badge">v4.23</span>
             </h1>
         </div>
         
@@ -822,7 +822,7 @@
                     <div class="btn-group" style="width: 100%">
                         <button type="button" class="btn-group-item active" style="flex: 1; justify-content: center;" onclick="setImportUrl(URL_MANIAGRO, this)">Maniagro</button>
                         <button type="button" class="btn-group-item" style="flex: 1; justify-content: center;" onclick="setImportUrl(URL_AGD, this)">AGD</button>
-                        <button type="button" class="btn-group-item" style="flex: 1; justify-content: center;" onclick="setImportUrl(URL_PRODEMAN, this)">Prodeman</button>
+                        <button type="button" class="btn-group-item" style="flex: 1; justify-content: center;" onclick="setImportUrl(URL_PRODEMAN_V2, this)">Prodeman</button>
                     </div>
                 </div>
                 <div class="form-group">
@@ -944,7 +944,8 @@
         // --- CONFIG & STATE ---
         const URL_MANIAGRO = "https://docs.google.com/spreadsheets/d/1IDhJ8E7h5d7ezknTK-BaJkF66ydHAy4zZAv4FLl9u0k/edit?usp=sharing";
         const URL_AGD = "https://docs.google.com/spreadsheets/d/11lmyzD_JjlQPFx9bypeBHAqnebX9vdvawqOWfMUmmYM/edit?usp=drive_link";
-        const URL_PRODEMAN = "https://docs.google.com/spreadsheets/d/127m4AOJ0R5G9bZGLDhdroFbYtcfDs3vtmczfgBtZs18/edit?usp=sharing";
+        // RENAMED VARIABLE TO FORCE UPDATE AND AVOID CACHING ISSUES
+        const URL_PRODEMAN_V2 = "https://docs.google.com/spreadsheets/d/127m4AOJ0R5G9bZGLDhdroFbYtcfDs3vtmczfgBtZs18/edit?usp=sharing";
         
         let colConfig = {
             'VALIDACION': { label: 'Validación', visible: false, dimensionKey: 'VALIDACION' },
@@ -1589,7 +1590,7 @@
                     btn.classList.add('active');
                 } else if (txt === 'AGD' && state.currentSheetUrl === URL_AGD) {
                     btn.classList.add('active');
-                } else if (txt === 'Prodeman' && state.currentSheetUrl === URL_PRODEMAN) {
+                } else if (txt === 'Prodeman' && state.currentSheetUrl === URL_PRODEMAN_V2) {
                     btn.classList.add('active');
                 }
             });
