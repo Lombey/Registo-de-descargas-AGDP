@@ -500,7 +500,7 @@
         <div class="brand">
             <img src="LOGO_AGDP POWERED BY CORVUS.png" alt="Logo AGDP" class="brand-logo">
             <h1>Descargas <span style="font-weight: 400; font-size: 0.9em; opacity: 0.9;">| AGDP</span> 
-                <span class="version-badge">v4.15</span>
+                <span class="version-badge">v4.16</span>
             </h1>
         </div>
         
@@ -930,25 +930,66 @@
         }
 
         function checkNotifications() {
-            const issues = state.data.filter(r => r.IS_DEFECT || r.IS_OVERWEIGHT || r.IS_MOD_TABLET);
-            state.notifications = issues;
+            // Hardcoded examples as requested
+            const hardcodedAlerts = [
+                {
+                    type: 'Modificación en Tolva',
+                    color: 'var(--info)',
+                    icon: 'ph-pencil-simple',
+                    message: 'El tolvero modificó el campo de humedad manualmente.',
+                    meta: 'Tolva: 04 - 28.500kg',
+                    time: '28/11/2025 14:30'
+                },
+                {
+                    type: 'Sobrepeso',
+                    color: 'var(--warning)',
+                    icon: 'ph-warning',
+                    message: 'Exceso de peso detectado en LA ESCONDIDA.',
+                    meta: 'Tolva: 01 - 32.100kg',
+                    time: '28/11/2025 12:15'
+                },
+                {
+                    type: 'Descarga Defectuosa',
+                    color: 'var(--danger)',
+                    icon: 'ph-warning-diamond',
+                    message: 'Falla en el sensor de humedad durante la descarga.',
+                    meta: 'Tolva: 02 - 15.000kg',
+                    time: '28/11/2025 10:45'
+                },
+                {
+                    type: 'No Validada',
+                    color: '#9f1239', // Darker red
+                    icon: 'ph-x-circle',
+                    message: 'La descarga no tiene código de autorización (CTG) válido.',
+                    meta: 'Tolva: 03 - 29.000kg',
+                    time: '28/11/2025 09:20'
+                }
+            ];
+            
+            state.notifications = hardcodedAlerts;
             
             const badge = document.getElementById('notif-badge');
             const list = document.getElementById('notif-list');
             
-            if (issues.length > 0) {
-                badge.style.display = 'block';
-                list.innerHTML = '';
-                issues.slice(0, 20).forEach(r => {
-                    let type = '', color = '', icon = '', message = '';
-                    if (r.IS_DEFECT) { type = 'Defectuosa'; color = 'var(--danger)'; icon = 'ph-warning-diamond'; message = `Problema de carga en ${r.ESTABLECIMIENTO}`; } 
-                    else if (r.IS_OVERWEIGHT) { type = 'Sobrepeso'; color = 'var(--warning)'; icon = 'ph-warning'; message = `Exceso de peso en ${r.ESTABLECIMIENTO}`; } 
-                    else if (r.IS_MOD_TABLET) { type = 'Modificación en Tolva'; color = 'var(--info)'; icon = 'ph-pencil-simple'; message = "El tolvero modificó un campo de la descarga desde la tolva"; }
-                    const item = document.createElement('div'); item.className = 'notif-item';
-                    item.innerHTML = `<i class="ph ${icon} notif-icon" style="color:${color}"></i><div><div class="notif-content"><strong>${type}</strong>: ${message} <br> <span style="font-size:0.8em; color:var(--text-light);">(Tolva: ${r.TOLVA})</span> - ${r.PESO_NUM.toLocaleString()}kg</div><div class="notif-time">${r['FECHA PESADA']} ${r['HORA PESADA']}</div></div>`;
-                    list.appendChild(item);
-                });
-            } else { badge.style.display = 'none'; list.innerHTML = `<div class="notif-item"><i class="ph ph-check-circle" style="color:var(--success);"></i><div class="notif-content">Sin nuevas alertas.</div></div>`; }
+            // Always show badge for hardcoded demo
+            badge.style.display = 'block';
+            list.innerHTML = '';
+            
+            hardcodedAlerts.forEach(alert => {
+                const item = document.createElement('div');
+                item.className = 'notif-item';
+                item.innerHTML = `
+                    <i class="ph ${alert.icon} notif-icon" style="color:${alert.color}"></i>
+                    <div>
+                        <div class="notif-content">
+                            <strong>${alert.type}</strong>: ${alert.message} <br> 
+                            <span style="font-size:0.8em; color:var(--text-light);">${alert.meta}</span>
+                        </div>
+                        <div class="notif-time">${alert.time}</div>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
         }
         function toggleNotifications() { document.getElementById('notif-dropdown').classList.toggle('active'); }
         function parseDateStrict(str) { if(!str) return null; const s = str.replace(/-/g, '/'); const parts = s.split('/'); if (parts.length !== 3) return null; let d, m, y; if (parts[0].length === 4) { y = parseInt(parts[0]); m = parseInt(parts[1]) - 1; d = parseInt(parts[2]); } else if (parts[2].length === 4) { y = parseInt(parts[2]); const a = parseInt(parts[0]); const b = parseInt(parts[1]); if (a > 12) { d = a; m = b - 1; } else if (b > 12) { m = a - 1; d = b; } else { d = a; m = b - 1; } } else { return null; } const date = new Date(y, m, d); return isNaN(date.getTime()) ? null : date; }
