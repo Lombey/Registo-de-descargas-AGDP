@@ -559,7 +559,7 @@
         <div class="brand">
             <img src="LOGO_AGDP POWERED BY CORVUS.png" alt="Logo AGDP" class="brand-logo">
             <h1>Descargas <span style="font-weight: 400; font-size: 0.9em; opacity: 0.9;">| AGDP</span> 
-                <span class="version-badge">v4.20</span>
+                <span class="version-badge">v4.22</span>
             </h1>
         </div>
         
@@ -944,7 +944,7 @@
         // --- CONFIG & STATE ---
         const URL_MANIAGRO = "https://docs.google.com/spreadsheets/d/1IDhJ8E7h5d7ezknTK-BaJkF66ydHAy4zZAv4FLl9u0k/edit?usp=sharing";
         const URL_AGD = "https://docs.google.com/spreadsheets/d/11lmyzD_JjlQPFx9bypeBHAqnebX9vdvawqOWfMUmmYM/edit?usp=drive_link";
-        const URL_PRODEMAN = "https://docs.google.com/spreadsheets/d/13G5U1T89O3jK9tIkLd4EzfuwQqhCd3QwVdMqw7yxkWQ/edit?usp=sharing";
+        const URL_PRODEMAN = "https://docs.google.com/spreadsheets/d/127m4AOJ0R5G9bZGLDhdroFbYtcfDs3vtmczfgBtZs18/edit?usp=sharing";
         
         let colConfig = {
             'VALIDACION': { label: 'Validación', visible: false, dimensionKey: 'VALIDACION' },
@@ -1583,9 +1583,13 @@
             input.value = state.currentSheetUrl; 
             document.querySelectorAll('#import-modal .btn-group-item').forEach(btn => {
                 btn.classList.remove('active');
-                if (btn.textContent.trim() === 'Maniagro' && state.currentSheetUrl === URL_MANIAGRO) {
+                const txt = btn.textContent.trim();
+                // Check exact matches including Prodeman
+                if (txt === 'Maniagro' && state.currentSheetUrl === URL_MANIAGRO) {
                     btn.classList.add('active');
-                } else if (btn.textContent.trim() === 'AGD' && state.currentSheetUrl === URL_AGD) {
+                } else if (txt === 'AGD' && state.currentSheetUrl === URL_AGD) {
+                    btn.classList.add('active');
+                } else if (txt === 'Prodeman' && state.currentSheetUrl === URL_PRODEMAN) {
                     btn.classList.add('active');
                 }
             });
