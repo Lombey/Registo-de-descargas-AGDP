@@ -37,9 +37,14 @@
             --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
             --input-bg: #ffffff;
 
-            /* Colores Grilla Agrupada (Modo Claro - Mejorado) */
-            --group-row-bg: #d1fae5; /* Verde menta suave, más visible que antes */
-            --group-row-text: #064e3b; /* Texto verde muy oscuro para contraste alto */
+            /* Colores Grilla Agrupada (Modo Claro) */
+            --group-row-bg: #d1fae5; 
+            --group-row-text: #064e3b; 
+            
+            /* Color específico para fondo de agrupación activo */
+            --group-active-bg: #dcfce7; 
+            --group-active-border: #22c55e;
+            --group-active-text: #15803d;
         }
 
         /* --- MODO OSCURO --- */
@@ -56,8 +61,13 @@
             --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
 
             /* Colores Grilla Agrupada (Modo Oscuro) */
-            --group-row-bg: #065f46; /* Verde bosque profundo */
-            --group-row-text: #ecfdf5; /* Texto casi blanco/menta para lectura clara */
+            --group-row-bg: #065f46; 
+            --group-row-text: #ecfdf5;
+
+            /* Ajuste de contraste para agrupación activa en modo oscuro */
+            --group-active-bg: #1e3a8a; 
+            --group-active-border: #3b82f6;
+            --group-active-text: #bfdbfe;
         }
         
         /* Overrides para Flatpickr en Dark Mode */
@@ -161,7 +171,7 @@
         .controls-container { background-color: var(--surface); padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border); box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 0.75rem; z-index: 10; flex-shrink: 0; }
         .filters-row { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
 
-        /* CUSTOM DROPDOWN STYLES */
+        /* CUSTOM DROPDOWN STYLES - SEARCHABLE */
         .custom-select-wrapper { position: relative; min-width: 130px; flex-grow: 1; }
         .custom-select-trigger {
             display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0.75rem; font-size: 0.85rem; 
@@ -194,12 +204,14 @@
         .option-item:hover { background-color: var(--bg-body); }
         .option-item input[type="checkbox"] { transform: scale(1.2); cursor: pointer; }
         
+        /* Input de búsqueda dentro del dropdown */
         .dropdown-search {
             width: 100%; padding: 0.4rem; font-size: 0.8rem; border: 1px solid var(--border); 
             border-radius: 0.25rem; margin-bottom: 0.5rem; background: var(--input-bg); color: var(--text-main);
             font-family: 'Inter', sans-serif;
         }
         .dropdown-search:focus { outline: none; border-color: var(--primary); }
+
 
         .search-input-wrapper { position: relative; min-width: 160px; flex-grow: 1; }
         .search-input { width: 100%; padding: 0.6rem 0.75rem 0.6rem 2.2rem; font-size: 0.85rem; border: 1px solid var(--border); border-radius: 0.375rem; font-family: 'Inter', sans-serif; transition: all 0.2s; background: var(--input-bg); color: var(--text-main); }
@@ -255,7 +267,7 @@
         th.text-right, td.text-right { text-align: right; }
         tbody tr:hover { background-color: var(--bg-body); }
         
-        /* ESTILO PARA FILAS AGRUPADAS (Mejorado) */
+        /* ESTILO PARA FILAS AGRUPADAS */
         .row-grouped { 
             background-color: var(--group-row-bg); 
             font-weight: 600; 
@@ -336,7 +348,7 @@
         <div class="brand">
             <img src="LOGO_AGDP POWERED BY CORVUS.png" alt="Logo AGDP" class="brand-logo">
             <h1>Descargas <span style="font-weight: 400; font-size: 0.9em; opacity: 0.9;">| AGDP</span> 
-                <span class="version-badge">v2.8</span>
+                <span class="version-badge">v2.9.1</span>
             </h1>
         </div>
         
@@ -644,12 +656,14 @@
                 state.data = parseCSV(csvText);
                 setDefaultDateFilters();
                 state.filtered = [...state.data];
+                
                 initDropdown('filter-productor', 'PRODUCTOR');
                 initDropdown('filter-est', 'ESTABLECIMIENTO');
                 initDropdown('filter-lote', 'LOTE');
                 initDropdown('filter-contratista', 'CONTRATISTA');
                 initDropdown('filter-tolva', 'TOLVA');
                 initDropdown('filter-prod', 'PRODUCTO');
+                
                 checkNotifications(); 
                 applyFilters();
             } catch (error) {
@@ -658,41 +672,51 @@
             }
         }
 
-        // AUTO-DETECT DATE FORMAT (YYYY-MM-DD vs DD/MM/YYYY vs MM/DD/YYYY)
+        // --- NOTIFICATIONS LOGIC ---
+        function checkNotifications() {
+            const issues = state.data.filter(r => r.IS_DEFECT || r.IS_OVERWEIGHT);
+            state.notifications = issues;
+            
+            const badge = document.getElementById('notif-badge');
+            const list = document.getElementById('notif-list');
+            
+            if (issues.length > 0) {
+                badge.style.display = 'block';
+                list.innerHTML = '';
+                issues.slice(0, 10).forEach(r => {
+                    const type = r.IS_DEFECT ? 'Defectuosa' : 'Sobrepeso';
+                    const color = r.IS_DEFECT ? 'var(--danger)' : 'var(--warning)';
+                    const icon = r.IS_DEFECT ? 'ph-warning-diamond' : 'ph-warning';
+                    
+                    const item = document.createElement('div');
+                    item.className = 'notif-item';
+                    item.innerHTML = `
+                        <i class="ph ${icon} notif-icon" style="color:${color}"></i>
+                        <div>
+                            <div class="notif-content">
+                                <strong>${type}</strong>: ${r.ESTABLECIMIENTO} - ${r.PESO_NUM.toLocaleString()}kg
+                            </div>
+                            <div class="notif-time">${r['FECHA PESADA']} ${r['HORA PESADA']}</div>
+                        </div>
+                    `;
+                    list.appendChild(item);
+                });
+            } else {
+                badge.style.display = 'none';
+                list.innerHTML = `<div class="notif-item"><i class="ph ph-check-circle" style="color:var(--success);"></i><div class="notif-content">Sin alertas pendientes.</div></div>`;
+            }
+        }
+        function toggleNotifications() { document.getElementById('notif-dropdown').classList.toggle('active'); }
+
         function parseDateStrict(str) {
             if(!str) return null;
-            const s = str.replace(/-/g, '/'); // Normalize
+            const s = str.replace(/-/g, '/'); 
             const parts = s.split('/');
             if (parts.length !== 3) return null;
-            
             let d, m, y;
-            
-            if (parts[0].length === 4) {
-                // Case: YYYY/MM/DD
-                y = parseInt(parts[0]);
-                m = parseInt(parts[1]) - 1;
-                d = parseInt(parts[2]);
-            } else if (parts[2].length === 4) {
-                // Case: DD/MM/YYYY or MM/DD/YYYY
-                y = parseInt(parts[2]);
-                const a = parseInt(parts[0]);
-                const b = parseInt(parts[1]);
-                
-                // Heuristic to detect Day vs Month
-                if (a > 12) {
-                    // 26/11/2025 -> DD/MM
-                    d = a; m = b - 1;
-                } else if (b > 12) {
-                    // 11/26/2025 -> MM/DD
-                    m = a - 1; d = b;
-                } else {
-                    // Ambiguous (01/02/2025). Default to DD/MM (ES Standard)
-                    d = a; m = b - 1;
-                }
-            } else {
-                return null; 
-            }
-            
+            if (parts[0].length === 4) { y = parseInt(parts[0]); m = parseInt(parts[1]) - 1; d = parseInt(parts[2]); } 
+            else if (parts[2].length === 4) { y = parseInt(parts[2]); const a = parseInt(parts[0]); const b = parseInt(parts[1]); if (a > 12) { d = a; m = b - 1; } else if (b > 12) { m = a - 1; d = b; } else { d = a; m = b - 1; } } 
+            else { return null; }
             const date = new Date(y, m, d);
             return isNaN(date.getTime()) ? null : date;
         }
@@ -702,7 +726,6 @@
             const dates = state.data.map(row => row.DATE_OBJ).filter(d => d);
             if (dates.length > 0) {
                 const maxDate = new Date(Math.max.apply(null, dates));
-                // Set inputs via Flatpickr API using Date Objects directly
                 if(state.fpFrom && state.fpTo) {
                     state.fpFrom.setDate(maxDate);
                     state.fpTo.setDate(maxDate);
@@ -829,8 +852,10 @@
         }
 
         function clearAllFilters() {
-            if(state.fpFrom) state.fpFrom.clear();
-            if(state.fpTo) state.fpTo.clear();
+            // PRESERVAR FECHAS
+            // if(state.fpFrom) state.fpFrom.clear();
+            // if(state.fpTo) state.fpTo.clear();
+            
             document.querySelectorAll('.custom-options input[type="checkbox"]').forEach(cb => cb.checked = false);
             document.getElementById('filter-destino-text').value = '';
             document.getElementById('filter-hide-low').checked = false;
