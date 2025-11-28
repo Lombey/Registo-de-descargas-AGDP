@@ -342,7 +342,7 @@
         <div class="brand">
             <img src="LOGO_AGDP POWERED BY CORVUS.png" alt="Logo AGDP" class="brand-logo">
             <h1>Descargas <span style="font-weight: 400; font-size: 0.9em; opacity: 0.9;">| AGDP</span> 
-                <span class="version-badge">v3.5</span>
+                <span class="version-badge">v3.6</span>
             </h1>
         </div>
         
@@ -405,6 +405,8 @@
                     <span>Hasta:</span>
                     <input type="text" id="filter-date-to" class="date-input" placeholder="DD/MM/AAAA">
                 </div>
+                
+                <button class="btn btn-outline" onclick="filterToday()" title="Ver descargas de hoy" style="padding: 0.6rem;">Hoy</button>
 
                 <div class="custom-select-wrapper" id="filter-productor"><div class="custom-select-trigger"><span>Productor</span> <i class="ph ph-caret-down"></i></div><div class="custom-options"></div></div>
                 <div class="custom-select-wrapper" id="filter-est"><div class="custom-select-trigger"><span>Establecimiento</span> <i class="ph ph-caret-down"></i></div><div class="custom-options"></div></div>
@@ -767,6 +769,13 @@
                     state.fpTo.setDate(maxDate);
                 }
             }
+        }
+
+        function filterToday() {
+            const today = new Date();
+            state.fpFrom.setDate(today);
+            state.fpTo.setDate(today);
+            applyFilters();
         }
 
         function parseCSVLine(text) {
